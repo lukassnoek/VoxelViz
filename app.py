@@ -6,20 +6,36 @@ import plotly.graph_objs as go
 import nibabel as nib
 import numpy as np
 
+# csrf_protect = False because otherwise gunicorn doesn't
+# serve the app properly
 app = dash.Dash(csrf_protect=False)
 server = app.server
+
+# Get the functional data (4D timeseries)
 ex_func = nib.load('test_func_flirted.nii.gz').get_data()
+
+# Use the mean as background
 bg_mean = ex_func.mean(axis=-1)
+
+# ... and standardize the timeseries for normalized viewing
+ex_func -= ex_func.mean(axis=-1, keepdims=True)
+ex_func /= ex_func.std(axis=-1, keepdims=True)
 tmp_img = nib.load('cope1.nii.gz')
 
-app.layout = html.Div(
+colors = {
+    'background': '#000000',
+    'text': '#D3D3D3'
+}
+
+# Start layout of app
+app.layout = html.Div(style={'backgroundColor': colors['text']},
     
     children=[
 
         html.Div(className='ten columns offset-by-one', children=[
 
-            html.H1(children='VoxelViz: An iteractive viewer for BOLD-fMRI data',
-                    style={'textAlign': 'center'},
+            html.H1(children='VoxelViz: An interactive viewer for BOLD-fMRI data',
+                    style={'textAlign': 'center', 'color': colors['text']},
                     id='title'),
 
             dcc.Markdown(
@@ -29,17 +45,16 @@ app.layout = html.Div(
                 """)
             ]),
 
-        html.Div(className='six columns', children=[
+        html.Div(className='five columns', children=[
 
             html.P("Pick whichever contrast you want to look at:"),
-            
+
             dcc.Dropdown(options=[{'label': 'Cope1', 'value': 'cope1.nii.gz'},
                                   {'label': 'Cope2', 'value': 'cope2.nii.gz'}],
                          value='cope1.nii.gz',
                          id='contrast'),
 
-            dcc.Graph(id='brainplot', animate=False),
-            
+            dcc.Graph(id='brainplot', animate=False),            
 
             html.Div(className='row', children=[
 
@@ -77,14 +92,31 @@ app.layout = html.Div(
 
         html.Div(className='six columns', children=[
 
+            html.P('Some text'),
+            
             html.Div(className='row', children=[
 
                 dcc.Graph(id='brainplot_time', animate=False)
                 ])
             ]),
 
-    ], className = "page"
+    ]#, className = "page"
 )
+
+
+def index_by_slice(direction, sslice, img):
+
+    if isinstance(img, str):
+        img = nib.load(img).get_data()
+
+    if direction == 'X':
+        img = img[sslice, :, :, ...]
+    elif direction == 'Y':
+        img = img[:, sslice, :, ...]
+    else:
+        img = img[:, :, sslice, ...]
+
+    return img
 
 
 @app.callback(
@@ -106,48 +138,59 @@ def update_slice_slider(direction):
      Input(component_id='slice', component_property='value')])
 def update_brainplot(threshold, contrast, direction, sslice):
     
-    img = nib.load(contrast).get_data()
-    if direction == 'X':
-        bg = bg_mean[sslice, :, :]
-        img = img[sslice, :, :]
-    elif direction == 'Y':
-        bg = bg_mean[:, sslice, :]
-        img = img[:, sslice, :]
-    else:
-        bg = bg_mean[:, :, sslice]
-        img = img[:, :, sslice]
+    bg = index_by_slice(direction, sslice, bg_mean)
+    img = index_by_slice(direction, sslice, contrast)
 
     bg_func = go.Heatmap(z=bg.T, colorscale='Greys', showscale=False, hoverinfo="none", name='background')
     tmp = np.ma.masked_where(np.abs(img) < threshold, img)
-    func = go.Heatmap(z=tmp.T, opacity=threshold, name=contrast.split('.')[0])
+    func = go.Heatmap(z=tmp.T, opacity=1, name=contrast.split('.')[0])
+
     layout = go.Layout(autosize=True,
-                       margin={'t': 50, 'l': 5, 'r': 5})
+                       margin={'t': 50, 'l': 5, 'r': 5},
+                       plot_bgcolor=colors['background'],
+                       paper_bgcolor=colors['background'],
+                       font={'color': colors['text']},
+                       xaxis=dict(autorange=True,
+                                  showgrid=False,
+                                  zeroline=False,
+                                  showline=False,
+                                  autotick=True,
+                                  ticks='',
+                                  showticklabels=False),
+                       yaxis=dict(autorange=True,
+                                  showgrid=False,
+                                  zeroline=False,
+                                  showline=False,
+                                  autotick=True,
+                                  ticks='',
+                                  showticklabels=False))
+
     return {'data': [bg_func, func], 'layout': layout}
 
-"""
-ToDo: update timeseries plot on hoover
 @app.callback(
     Output(component_id='brainplot_time', component_property='figure'),
     [Input(component_id='threshold', component_property='value'),
      Input(component_id='contrast', component_property='value'),
      Input(component_id='direction', component_property='value'),
-     Input(component_id='slice', component_property='value')])
-def update_brainplot_time(threshold, contrast, direction, sslice):
+     Input(component_id='slice', component_property='value'),
+     Input(component_id='brainplot', component_property='hoverData')])
+def update_brainplot_time(threshold, contrast, direction, sslice, hoverData):
     
-    img = nib.load(contrast).get_data()
-    if direction == 'X':
-        img = ex_func[sslice, :, :, :]
-    elif direction == 'Y':
-        img = img[:, sslice, :]
+    if hoverData is None:
+        x, y = 40, 40
     else:
-        img = img[:, :, sslice]
+        x = hoverData['points'][0]['x']
+        y = hoverData['points'][0]['y']
+    
+    img = index_by_slice(direction, sslice, ex_func)
+    data = go.Scatter(x=np.arange(100), y=img[x, y, :].ravel())
+    layout = go.Layout(autosize=True,
+                       margin={'t': 50, 'l': 50, 'r': 5},
+                       plot_bgcolor=colors['background'],
+                       paper_bgcolor=colors['background'],
+                       font={'color': colors['text']})
 
-    go.Scatter(x=np.arange(100), y=)
-    func = go.Heatmap(z=tmp.T, opacity=threshold, name=contrast.split('.')[0])
-    layout = go.Layout(title='Contrast: %s' % contrast.split('.')[0], autosize=True,
-                       margin={'t': 50, 'l': 5, 'r': 5})
-    return {'data': [bg_func, func], 'layout': layout}
-"""
+    return {'data': [data], 'layout': layout}
 
 external_css = ["https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css"]
     
