@@ -6,7 +6,8 @@ import plotly.graph_objs as go
 import nibabel as nib
 import numpy as np
 
-app = dash.Dash()
+app = dash.Dash(csrf_protect=False)
+server = app.server
 ex_func = nib.load('test_func_flirted.nii.gz').get_data()
 bg_mean = ex_func.mean(axis=-1)
 tmp_img = nib.load('cope1.nii.gz')
