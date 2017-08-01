@@ -1,6 +1,6 @@
 import os.path as op
 import nibabel as nib
-
+import json
 
 def index_by_slice(direction, sslice, img):
 
@@ -17,18 +17,16 @@ def index_by_slice(direction, sslice, img):
     return img
 
 
-def load_data(dataset, contrast):
+def load_data(feat_dir, load_func=False):
 
-	mappings = {'action': 'Cope1',
-	            'interoception': 'Cope2',
-	            'situation': 'Cope3',
-	            'action>interoception': 'Cope4',
-	            'action>situation': 'Cope5',
-	            'interoception>situation': 'Cope6'}
-	contrast = mappings[contrast]
-	
-	path = op.join(dataset, contrast + '.gfeat')
-	func = nib.load(op.join(path, 'filtered_func_data.nii.gz')).get_data()
+	path = op.join(feat_dir + '.feat')
 	con = nib.load(op.join(path, 'stats', 'zstat1.nii.gz')).get_data()
 
-	return func, con 
+	if load_func:
+		func = nib.load(op.join(path, 'filtered_func_data.nii.gz')).get_data()
+		return func, con
+	else:
+		return con
+
+def standardize(func):
+	return (func - func.mean(axis=-1, keepdims=True)) / func.std(axis=-1, keepdims=True)
