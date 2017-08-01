@@ -1,0 +1,11 @@
+{
+  "mappings": {
+  
+    "cope1": "action",
+  	"cope2": "interoception",
+  	"cope3": "situation",
+  	"cope4": "action>interoception",
+  	"cope5": "action>situation",
+  	"cope6": "interoception>situation"
+  }
+}
