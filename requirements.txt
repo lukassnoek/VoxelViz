@@ -1,0 +1,8 @@
+numpy
+scipy
+dash
+dash-renderer
+dash-core-components
+dash-html-components
+nibabel
+plotly
