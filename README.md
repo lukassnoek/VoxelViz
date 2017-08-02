@@ -54,7 +54,7 @@ respectively.) Changing the "contrast" will update both the brain plot and the t
 ToDo: update GIF
 ![alt text](https://github.com/lukassnoek/VoxelViz/raw/master/img/different_datasets.gif "Logo Title Text 1")
 
-#### Viewing/scrolling options
+### Viewing/scrolling options
 The brain is of course a 3D dimensional object that is, here, visualized in 2D. I've included two options
 to configure which part (and in which orientation) you're viewing the brain image. Next to the "contrasts"
 dropdown menu, you can choose whether you want to view the brain in a saggital orientation (from the side; "X"),
