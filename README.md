@@ -102,7 +102,8 @@ run:
 
 	$ python app.py
 
-This should start a browser with the app running on `http://localhost:8000`!
+Now, go to `http://localhost:8050` (or `:8051` for the `showcase` example) in your browser
+to view and use the app!
 
 ## To do
 Couple of thing that I'd still like to implement!
