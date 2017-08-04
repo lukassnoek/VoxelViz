@@ -22,7 +22,7 @@ def index_by_slice(direction, sslice, img):
 def load_data(feat_dir, load_func=False):
 
 	path = op.join(feat_dir + '.feat')
-	con = nib.load(op.join(path, 'stats', 'zstat1.nii.gz')).get_data()
+	con = nib.load(op.join(path, 'stats', 'tstat1.nii.gz')).get_data()
 
 	if load_func:
 		func = nib.load(op.join(path, 'filtered_func_data.nii.gz')).get_data()
@@ -39,8 +39,9 @@ def read_design_file(feat_dir):
     path = op.join(feat_dir + '.feat')
     design_file = op.join(path, 'design.mat')
     mat = np.loadtxt(design_file, skiprows=5)
-    if not np.all(mat):
-        mat = np.hstack((np.ones(mat.shape[0], 1), mat[:, np.newaxis]))
+
+    if not np.all(mat == 1.0):
+        mat = np.hstack((np.ones((mat.shape[0], 1)), mat))
 
     if mat.ndim == 1:
         mat = mat[:, np.newaxis]

@@ -286,10 +286,10 @@ def update_brainplot_time(threshold, contrast, direction, sslice, hoverData, vox
                                   showticklabels=True,
                                   title='Activation (contrast estimate)'))
                                   #range=[-4, 4]))
-
+    
     with open("current_contrast.txt", "r") as text_file:
         current_contrast = text_file.readlines()[0]
-
+    
     if contrast != current_contrast:
         global global_contrast, global_func, global_bg, global_design
         global_func, global_contrast = load_data(contrast, load_func=True)
@@ -304,7 +304,10 @@ def update_brainplot_time(threshold, contrast, direction, sslice, hoverData, vox
     layout.xaxis['title'] = 'Subjects' if global_contrast.shape == (91, 109, 91) else 'Time'
 
     if hoverData is None:
-        x, y = 40, 40
+        if global_contrast.shape == (91, 109, 91):
+            x, y = 40, 40
+        else:
+            x, y = 40, 20
     else:
         x = hoverData['points'][0]['x']
         y = hoverData['points'][0]['y']
