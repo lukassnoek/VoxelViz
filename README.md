@@ -51,7 +51,6 @@ analyses, which are referred to by keywords such as "action", "interoception", "
 states, interoception-oriented emotional states, and the difference between action and interoception states,
 respectively.) Changing the "contrast" will update both the brain plot and the timeseries plot!
 
-ToDo: update GIF
 ![alt text](https://github.com/lukassnoek/VoxelViz/raw/master/img/different_datasets.gif "Logo Title Text 1")
 
 ### Viewing/scrolling options
@@ -71,7 +70,7 @@ unthresholded results, so `VoxelViz` contains a slides to adjust the threshold! 
 automatically updates the brain plot (higher thresholds should show less red/blue and vice versa).
 
 ToDo: update GIF
-![alt text](https://github.com/lukassnoek/VoxelViz/raw/master/img/threshold.gif "Logo Title Text 1")
+![alt text](https://github.com/lukassnoek/VoxelViz/raw/master/img/thresholding.gif "Logo Title Text 1")
 
 ### Visualize underlying timeseries
 In the right panel of the app, there is a "timeseries" plot that shows the underlying signal of
@@ -79,7 +78,16 @@ the highlighted [voxel](https://en.wikipedia.org/wiki/Voxel) (3D equivalent of p
 In other words, if you hover over a voxel in the brain plot, the timeseries plot will automatically show
 the underlying signal of that voxel. 
 
-ToDo: make gif, explain model fit option!
+![alt text](https://github.com/lukassnoek/VoxelViz/raw/master/img/hover.gif "Logo Title Text 1")
+
+### Visualize model fit
+The "results" in the left panel (the brain plot) are derived from models fit to the timeseries data
+in the right panel. By clicking on the "Model" checkbox above the right plot, you can visualize the model
+fit to the data, which again updates when you change the position of your cursor. This is especially helpful
+in a teaching context when you want to show students the effect of preprocessing options (such as filtering,
+confound regression, etc.) on your model fit! 
+
+![alt text](https://github.com/lukassnoek/VoxelViz/raw/master/img/model.gif "Logo Title Text 1")
 
 ## See for yourself!
 `VoxelViz` will run as a standonly app on a VPS [X8 BladeVPS](https://www.transip.nl/vps/)
@@ -98,10 +106,9 @@ run:
 
 This should start a browser with the app running on `http://localhost:8000`!
 
-## ToDo
-Couple of thing that I'd still like to implement (before the deadline of 8 August):
+## To do
+Couple of thing that I'd still like to implement!
 
-- Add a timeseries plot corresponding to the "hover" of the brain-plot [DONE]
-- Fix styling (rows, columns) [DONE]
-- Add modelfit option in timeseries plot
-- Add some extra text (explanation)
+- Make it a standalone app for others to use! 
+- Add option to load variable regressors in checkbox;
+- Figure out NGINX;

@@ -183,7 +183,7 @@ def update_parameter_statistics(figure, voxel_disp):
                 F = 0
             out = 'Model fit (F-test): %s' % str(np.round(F, 3))
         else:
-            return 'Model fit (sum of squared errors): %.3f' % SSE
+            return 'Model fit (mean squared error): %.3f' % (SSE / float(signal.size))
     else:
         out = ''
 
@@ -332,4 +332,4 @@ for css in external_css:
 
 
 if __name__ == '__main__':
-    app.run_server()
+    app.run_server(ssl_context='adhoc')
