@@ -60,7 +60,6 @@ dropdown menu, you can choose whether you want to view the brain in a saggital o
 coronal orientation (from the front; "Y"), or axial orientation (from the top; "Z"). Next to the "X/Y/Z" option,
 there is a slides that allows you "scroll" through the brain.
 
-ToDo: update GIF
 ![alt text](https://github.com/lukassnoek/VoxelViz/raw/master/img/scrolling.gif "Logo Title Text 1")
 
 ### Adjust the (statistical) threshold
@@ -69,7 +68,6 @@ the results are by default thresholded at `abs(Z) > 2.3`. But sometimes its info
 unthresholded results, so `VoxelViz` contains a slides to adjust the threshold! Adjusting the threshold
 automatically updates the brain plot (higher thresholds should show less red/blue and vice versa).
 
-ToDo: update GIF
 ![alt text](https://github.com/lukassnoek/VoxelViz/raw/master/img/thresholding.gif "Logo Title Text 1")
 
 ### Visualize underlying timeseries
