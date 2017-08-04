@@ -1,6 +1,8 @@
 import os.path as op
 import nibabel as nib
 import json
+import numpy as np
+
 
 def index_by_slice(direction, sslice, img):
 
@@ -28,5 +30,20 @@ def load_data(feat_dir, load_func=False):
 	else:
 		return con
 
+
 def standardize(func):
 	return (func - func.mean(axis=-1, keepdims=True)) / func.std(axis=-1, keepdims=True)
+
+
+def read_design_file(feat_dir):
+    path = op.join(feat_dir + '.feat')
+    design_file = op.join(path, 'design.mat')
+    mat = np.loadtxt(design_file, skiprows=5)
+    if not np.all(mat):
+        mat = np.hstack((np.ones(mat.shape[0], 1), mat[:, np.newaxis]))
+
+    if mat.ndim == 1:
+        mat = mat[:, np.newaxis]
+
+    return mat
+

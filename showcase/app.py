@@ -11,7 +11,7 @@ import json
 import sys
 
 sys.path.append('..')  # to enable loading from utils
-from utils import load_data, index_by_slice, standardize
+from utils import load_data, index_by_slice, standardize, read_design_file
 
 # csrf_protect = False because otherwise gunicorn doesn't
 # serve the app properly
@@ -25,7 +25,7 @@ with open('config.json') as config:
 # Get the first key (random) from mappings, and load contrast/func
 global_contrast_name = list(cfg['mappings'].keys())[0]
 global_func, global_contrast = load_data(global_contrast_name, load_func=True)
-global_func = standardize(global_func)
+global_design = read_design_file(global_contrast_name)
 
 # Kind of an hack: save on disk which contrast we've loaded
 # (to avoid reloading the func-data every callback)
@@ -34,10 +34,12 @@ with open("current_contrast.txt", "w") as text_file:
 
 # Use the mean as background
 if global_func.shape[:3] == (91, 109, 91):
-    bg = nib.load(op.join('..', 'standard.nii.gz')).get_data()
+    global_bg = nib.load(op.join('..', 'standard.nii.gz')).get_data()
 else:
-    print("Not yet implemented!")
+    global_bg = global_func.mean(axis=-1)
 
+global_func = standardize(global_func)
+    
 colors = {
     'background': '#000000',
     'text': '#D3D3D3'
@@ -134,7 +136,7 @@ app.layout = html.Div(
                                 {'label': 'Voxel', 'value': 'voxel'},
                                 {'label': 'Model', 'value': 'model'}
                                 ],
-                        values=['voxel'])#, labelStyle={'display': 'inline-block'})
+                        values=['voxel'], id='voxel_disp')#, labelStyle={'display': 'inline-block'})
                 ], style={'padding-left': '550px'})
                     
             ]),
@@ -160,9 +162,9 @@ app.layout = html.Div(
 def update_slice_slider(direction):
 
     # To fix!
-    srange = {'X': 91,
-              'Y': 109,
-              'Z': 91}
+    srange = {'X': global_contrast.shape[0],
+              'Y': global_contrast.shape[1],
+              'Z': global_contrast.shape[2]}
 
     return srange[direction]
 
@@ -178,13 +180,17 @@ def update_brainplot(threshold, contrast, direction, sslice):
         current_contrast = text_file.readlines()[0]
 
     if contrast != current_contrast:
-        global global_contrast
-        global_contrast = load_data(contrast, load_func=False)
+        global global_contrast, global_bg
+        if global_contrast.shape == (91, 109, 91):
+            global_contrast = load_data(contrast, load_func=False)
+        else:
+            global_func, global_contrast = load_data(contrast, load_func=True)
+            global_bg = global_func.mean(axis=-1)
 
         with open("current_contrast.txt", "w") as text_file:
             text_file.write(contrast)
     
-    bg_slice = index_by_slice(direction, sslice, bg)
+    bg_slice = index_by_slice(direction, sslice, global_bg)
     img_slice = index_by_slice(direction, sslice, global_contrast)
 
     bg_map = go.Heatmap(z=bg_slice.T, colorscale='Greys', showscale=False, hoverinfo="none", name='background')
@@ -221,28 +227,10 @@ def update_brainplot(threshold, contrast, direction, sslice):
      Input(component_id='contrast', component_property='value'),
      Input(component_id='direction', component_property='value'),
      Input(component_id='slice', component_property='value'),
-     Input(component_id='brainplot', component_property='hoverData')])
-def update_brainplot_time(threshold, contrast, direction, sslice, hoverData):
-    
-    with open("current_contrast.txt", "r") as text_file:
-        current_contrast = text_file.readlines()[0]
+     Input(component_id='brainplot', component_property='hoverData'),
+     Input(component_id='voxel_disp', component_property='values')])
+def update_brainplot_time(threshold, contrast, direction, sslice, hoverData, voxel_disp):
 
-    if contrast != current_contrast:
-        global global_contrast, global_func
-        global_func, global_contrast = load_data(contrast, load_func=True)
-        global_func = standardize(global_func)
-
-        with open("current_contrast.txt", "w") as text_file:
-            text_file.write(contrast)
-    
-    if hoverData is None:
-        x, y = 40, 40
-    else:
-        x = hoverData['points'][0]['x']
-        y = hoverData['points'][0]['y']
-    
-    img = index_by_slice(direction, sslice, global_func)
-    data = go.Scatter(x=np.arange(global_func.shape[-1]), y=img[x, y, :].ravel())
     layout = go.Layout(autosize=True,
                        margin={'t': 50, 'l': 50, 'r': 5},
                        plot_bgcolor=colors['background'],
@@ -267,14 +255,45 @@ def update_brainplot_time(threshold, contrast, direction, sslice, hoverData):
                                   title='Activation (contrast estimate)'))
                                   #range=[-4, 4]))
 
-    return {'data': [data], 'layout': layout}
+    with open("current_contrast.txt", "r") as text_file:
+        current_contrast = text_file.readlines()[0]
 
+    if contrast != current_contrast:
+        global global_contrast, global_func, global_bg, global_design
+        global_func, global_contrast = load_data(contrast, load_func=True)
+        global_design = read_design_file(contrast)
+        global_func = standardize(global_func)
+
+        with open("current_contrast.txt", "w") as text_file:
+            text_file.write(contrast)
+    
+    if hoverData is None:
+        x, y = 40, 40
+    else:
+        x = hoverData['points'][0]['x']
+        y = hoverData['points'][0]['y']
+
+    img = index_by_slice(direction, sslice, global_func)
+    signal = img[x, y, :].ravel()
+    if np.all(np.isnan(signal)):
+        signal = np.zeros(signal.size)
+    
+    data = go.Scatter(x=np.arange(global_func.shape[-1]), y=signal, name='Activity')
+    
+    if 'model' in voxel_disp and not np.all(signal == 0):
+        global_design = np.random.randn(signal.shape[0])[:, np.newaxis]
+        betas = np.linalg.lstsq(global_design, signal)[0]
+        signal_hat = betas.dot(global_design.T)
+        fit = np.corrcoef(signal_hat, signal)[0, 1]
+        fitted_model = go.Scatter(x=np.arange(global_func.shape[-1]), y=signal_hat, name='Model fit')
+        return {'data': [data, fitted_model], 'layout': layout}
+    else:
+        return {'data': [data], 'layout': layout}
 external_css = ["https://codepen.io/lukassnoek/pen/Kvzmzv.css"]
 
 for css in external_css:
     app.css.append_css({"external_url": css})
 
-#app.css.append_css({"relative_package_path": "app.css"})
 
 if __name__ == '__main__':
     app.run_server()
