@@ -25,7 +25,6 @@ def load_data(feat_dir, load_func=False):
     con = nib.load(op.join(path, 'stats', 'tstat1.nii.gz')).get_data()
 
     if load_func:
-        print('loading %s' % path)
         func = nib.load(op.join(path, 'filtered_func_data.nii.gz')).get_data()
         return func, con
     else:
