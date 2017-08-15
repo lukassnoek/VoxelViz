@@ -21,18 +21,19 @@ def index_by_slice(direction, sslice, img):
 
 def load_data(feat_dir, load_func=False):
 
-	path = op.join(feat_dir + '.feat')
-	con = nib.load(op.join(path, 'stats', 'tstat1.nii.gz')).get_data()
+    path = op.join(feat_dir + '.feat')
+    con = nib.load(op.join(path, 'stats', 'tstat1.nii.gz')).get_data()
 
-	if load_func:
-		func = nib.load(op.join(path, 'filtered_func_data.nii.gz')).get_data()
-		return func, con
-	else:
-		return con
+    if load_func:
+        print('loading %s' % path)
+        func = nib.load(op.join(path, 'filtered_func_data.nii.gz')).get_data()
+        return func, con
+    else:
+        return con
 
 
 def standardize(func):
-	return (func - func.mean(axis=-1, keepdims=True)) / func.std(axis=-1, keepdims=True)
+    return (func - func.mean(axis=-1, keepdims=True)) / func.std(axis=-1, keepdims=True)
 
 
 def read_design_file(feat_dir):

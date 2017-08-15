@@ -2,8 +2,8 @@
   "standardize": 0,
   "mappings": {
   
+    "nopreproc": "No preproc",
     "highpass": "High-pass",
-  	"nopreproc": "No preproc",
   	"highpass_moco_smooth": "Smoothed"
   	}
 }

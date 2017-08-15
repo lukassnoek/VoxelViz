@@ -101,7 +101,7 @@ app.layout = html.Div(
                         value=50,
                         id='slice'),
 
-                ]),
+                ], style={'padding-top': '5px'}),
 
             ], style={'padding-bottom': '20px'}),
 
@@ -122,10 +122,10 @@ app.layout = html.Div(
 
                     dcc.Slider(id='threshold',
                                min=0,
-                               max=6,
+                               max=10,
                             step=0.1,
                             value=2.3,
-                            marks={i: i for i in np.arange(0, 6.5, 0.5)})
+                            marks={i: i for i in np.arange(0, 10.5, 0.5)})
                 ], style={'padding-top': '5px'})
             ]),
         ]),
@@ -216,7 +216,7 @@ def update_brainplot(threshold, contrast, direction, sslice):
         current_contrast = text_file.readlines()[0]
 
     if contrast != current_contrast:
-        global global_contrast, global_bg
+        global global_contrast, global_bg, global_func
         if global_contrast.shape == (91, 109, 91):
             global_contrast = load_data(contrast, load_func=False)
         else:
@@ -289,12 +289,12 @@ def update_brainplot_time(threshold, contrast, direction, sslice, hoverData, vox
                                   showticklabels=True,
                                   title='Activation (contrast estimate)'))
                                   #range=[-4, 4]))
-
+    
     with open("current_contrast.txt", "r") as text_file:
         current_contrast = text_file.readlines()[0]
 
     if contrast != current_contrast:
-        global global_contrast, global_func, global_bg, global_design
+        global global_contrast, global_func, global_design
         global_func, global_contrast = load_data(contrast, load_func=True)
         global_design = read_design_file(contrast)
         if cfg['standardize']:
@@ -303,29 +303,32 @@ def update_brainplot_time(threshold, contrast, direction, sslice, hoverData, vox
         with open("current_contrast.txt", "w") as text_file:
             text_file.write(contrast)
     
-    layout.title = 'Activation across subjects' if global_contrast.shape == (91, 109, 91) else 'Activation across time'
-    layout.xaxis['title'] = 'Subjects' if global_contrast.shape == (91, 109, 91) else 'Time'
+    layout.title = 'Activation across subjects' if grouplevel else 'Activation across time'
+    layout.xaxis['title'] = 'Subjects' if grouplevel else 'Time'
 
     if hoverData is None:
-        x, y = 40, 40
+        if grouplevel:
+            x, y = 40, 40
+        else:
+            x, y = 20, 20
     else:
         x = hoverData['points'][0]['x']
         y = hoverData['points'][0]['y']
-
+    
     img = index_by_slice(direction, sslice, global_func)
     signal = img[x, y, :].ravel()
     if np.all(np.isnan(signal)):
         signal = np.zeros(signal.size)
     
     if grouplevel:
+        bcolors = ['rgb(225,20,20)' if sig > 0 else 'rgb(35,53,216)' for sig in signal]
         data = go.Bar(x=np.arange(1, global_func.shape[-1] + 1), y=signal, name='Activity',
-                      marker=dict(color='rbg(139,0,0)'))# if sig > 0 else 'rbga(76,76,255,1)'
-                                         #for sig in signal])
+                      marker=dict(color=bcolors,
+                                  line=dict(color='rgb(211,211,211)', width=0.2)))
     else:
         data = go.Scatter(x=np.arange(global_func.shape[-1]), y=signal, name='Activity')
     
     if 'model' in voxel_disp and not np.all(signal == 0):
-        #global_design = np.random.randn(signal.shape[0])[:, np.newaxis]
         betas = np.linalg.lstsq(global_design, signal)[0]
         signal_hat = betas.dot(global_design.T)
         fitted_model = go.Scatter(x=np.arange(1, global_func.shape[-1] + 1), y=signal_hat,
@@ -340,4 +343,4 @@ for css in external_css:
 
 
 if __name__ == '__main__':
-    app.run_server()#ssl_context='adhoc')
+    app.run_server(ssl_context='adhoc')
