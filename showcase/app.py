@@ -32,8 +32,11 @@ global_design = read_design_file(global_contrast_name)
 with open("current_contrast.txt", "w") as text_file:
     text_file.write(global_contrast_name)
 
+# timeseries or subjects?
+grouplevel = global_func.shape[:3] == (91, 109, 91)
+
 # Use the mean as background
-if global_func.shape[:3] == (91, 109, 91):
+if grouplevel:
     global_bg = nib.load(op.join('..', 'standard.nii.gz')).get_data()
 else:
     global_bg = global_func.mean(axis=-1)
@@ -88,7 +91,7 @@ app.layout = html.Div(
                         ],
                         labelStyle={'display': 'inline-block'},
                         value='X')
-                ]),
+                ], style={'color': colors['text'], 'padding-top': '5px'}),
                 
                 html.Div(className='four columns', children=[
 
@@ -314,13 +317,18 @@ def update_brainplot_time(threshold, contrast, direction, sslice, hoverData, vox
     if np.all(np.isnan(signal)):
         signal = np.zeros(signal.size)
     
-    data = go.Scatter(x=np.arange(global_func.shape[-1]), y=signal, name='Activity')
+    if grouplevel:
+        data = go.Bar(x=np.arange(1, global_func.shape[-1] + 1), y=signal, name='Activity',
+                      marker=dict(color='rbg(139,0,0)'))# if sig > 0 else 'rbga(76,76,255,1)'
+                                         #for sig in signal])
+    else:
+        data = go.Scatter(x=np.arange(global_func.shape[-1]), y=signal, name='Activity')
     
     if 'model' in voxel_disp and not np.all(signal == 0):
         #global_design = np.random.randn(signal.shape[0])[:, np.newaxis]
         betas = np.linalg.lstsq(global_design, signal)[0]
         signal_hat = betas.dot(global_design.T)
-        fitted_model = go.Scatter(x=np.arange(global_func.shape[-1]), y=signal_hat,
+        fitted_model = go.Scatter(x=np.arange(1, global_func.shape[-1] + 1), y=signal_hat,
                                   name='Model fit')
         return {'data': [data, fitted_model], 'layout': layout}
     else:
@@ -332,4 +340,4 @@ for css in external_css:
 
 
 if __name__ == '__main__':
-    app.run_server(ssl_context='adhoc')
+    app.run_server()#ssl_context='adhoc')
