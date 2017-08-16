@@ -1,6 +1,21 @@
 # VoxelViz
 Visualization tool for (f)MRI data-sets using Plotly Dash. Submitted to the [TransIP](https://www.transip.nl/) VPS competition.
 
+## To do
+Couple of thing that I'd still like to implement and (relatively unimportant) bugfixes.
+
+To fix:
+- [x] Fix update timeseries when changing brainplot
+- [ ] Fix range of slice-scrolling (currently sometimes out of range)
+- [ ] Fix automatic range in heatmap (colors are now variable)
+- [ ] Fix location (and text-color) of model/voxel checkbox!
+
+To implement:
+- [ ] Refactor to make standalone app!
+- [ ] Add option to show separate regressors (not only model fit)
+- [ ] Option to toggle between timeseries and frequency view (nice to show effect of e.g. highpass filter)
+- [ ] Add download script to download data to check examples (teaching/showcase) locally
+
 ## Intro
 This tool was originally developed for the TransIP VPS competition ("come up with an original idea
 for a virtual private server"), but mainly because I was looking for an excuse to mess around with
@@ -88,25 +103,16 @@ confound regression, etc.) on your model fit!
 ![alt text](https://github.com/lukassnoek/VoxelViz/raw/master/img/model.gif "Logo Title Text 1")
 
 ## See for yourself!
-`VoxelViz` will run as a standalone app on a VPS [X8 BladeVPS](https://www.transip.nl/vps/)
+`VoxelViz` runs as a standalone app on a VPS [X8 BladeVPS](https://www.transip.nl/vps/)
 from TransIP, which can be viewed at [teaching.lukas-snoek.com](http://teaching.lukas-snoek.com/) and [showcase.lukas-snoek.com](http://showcase.lukas-snoek.com/).
 
-Alternatively, you can clone this repository and run the app(s) locally! First, you'll need to
-install the dependencies, which you can do through:
+If you want to mess around with the app yourself with your own data, you can clone this repo!
+First, you need to install the dependencies, which you can do through:
 
 	$ pip install -r requirements.txt
 
-Then, navigate to the directory (`usecase` or `teaching`) of the app you want to start, and
-run:
+Then, put your own data in the `usecase` or `teaching` folder (and rename the folder if you want), change the `config.json` file, and run:
 
 	$ python app.py
 
-Now, go to `http://localhost:8050` (or `:8051` for the `showcase` example) in your browser
-to view and use the app!
-
-## To do
-Couple of thing that I'd still like to implement!
-
-- Make it a standalone app for others to use! 
-- Add option to load variable regressors in checkbox;
-- Toggle between timeseries view and frequency/powerplot view
+Now, go to `http://localhost:8050` in your browser to view and use the app!
