@@ -48,3 +48,19 @@ def read_design_file(feat_dir):
 
     return mat
 
+
+def calculate_statistics(y, y_hat, n_pred, grouplevel):
+
+    SSE = ((y_hat - y) ** 2).sum()
+    
+    if grouplevel:
+        return 'Model fit (mean squared error): %.3f' % (SSE / float(y.size))
+    else:
+        SSM = ((y_hat - y.mean()) ** 2).sum()
+        df1 = np.max(n_pred - 1, 1)
+        df2 = y.size - df1
+        MSM = SSM / df1
+        F = MSM / (SSE / df2)
+        if np.isnan(F) or np.isinf(np.abs(F)):
+            F = 0
+        return 'Model fit (F-test): %s' % str(np.round(F, 3))

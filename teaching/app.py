@@ -6,12 +6,14 @@ import plotly.graph_objs as go
 import nibabel as nib
 import numpy as np
 from glob import glob
+from collections import OrderedDict
 import os.path as op
 import json
 import sys
 
 sys.path.append('..')  # to enable loading from utils
-from utils import load_data, index_by_slice, standardize, read_design_file
+from utils import (load_data, index_by_slice, standardize,
+                   read_design_file, calculate_statistics)
 
 # csrf_protect = False because otherwise gunicorn doesn't
 # serve the app properly
@@ -20,7 +22,7 @@ server = app.server
 
 # Load config (with mappings)
 with open('config.json') as config:    
-    cfg = json.load(config)
+    cfg = json.load(config, object_pairs_hook=OrderedDict)
 
 # Get the first key (random) from mappings, and load contrast/func
 global_contrast_name = list(cfg['mappings'].keys())[0]
@@ -98,7 +100,7 @@ app.layout = html.Div(
                     dcc.Slider(
                         min=0,
                         step=1,
-                        value=50,
+                        value=50 if grouplevel else 30,
                         id='slice'),
 
                 ], style={'padding-top': '5px'}),
@@ -170,27 +172,11 @@ app.layout = html.Div(
 def update_parameter_statistics(figure, voxel_disp):
 
     if 'model' in voxel_disp and len(figure['data']) > 1: 
-        signal = np.array(figure['data'][0]['y'])
-        fitted_model = np.array(figure['data'][1]['y'])
-        SSE = ((fitted_model - signal) ** 2).sum()
-            
-        if not np.all(global_design == 1.0):
-
-            SSM = ((fitted_model - signal.mean()) ** 2).sum()
-            SSE = ((fitted_model - signal) ** 2).sum()
-            df1 = np.max([global_design.shape[1] - 1, 1])
-            df2 = signal.size - df1
-            MSM = SSM / df1
-            F = MSM / (SSE / df2)
-            if np.isnan(F) or np.isinf(np.abs(F)):
-                F = 0
-            out = 'Model fit (F-test): %s' % str(np.round(F, 3))
-        else:
-            return 'Model fit (mean squared error): %.3f' % (SSE / float(signal.size))
-    else:
-        out = ''
-
-    return out
+        y = np.array(figure['data'][0]['y'])
+        y_hat = np.array(figure['data'][1]['y'])
+        stat_txt = calculate_statistics(y, y_hat, grouplevel)
+        
+    return stat_txt
 
 @app.callback(
     Output(component_id='slice', component_property='max'),
@@ -231,7 +217,7 @@ def update_brainplot(threshold, contrast, direction, sslice):
 
     bg_map = go.Heatmap(z=bg_slice.T, colorscale='Greys', showscale=False, hoverinfo="none", name='background')
     tmp = np.ma.masked_where(np.abs(img_slice) < threshold, img_slice)
-    func_map = go.Heatmap(z=tmp.T, opacity=1, name='test',
+    func_map = go.Heatmap(z=tmp.T, opacity=1, name='Activity map',
                           colorbar={'thickness': 20, 'title': 'Z-val', 'x': -.1})
 
     layout = go.Layout(autosize=True,
