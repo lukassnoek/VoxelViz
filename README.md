@@ -6,7 +6,7 @@ This tool was originally developed for the TransIP VPS competition ("come up wit
 for a virtual private server"), but mainly because I was looking for an excuse to mess around with
 the new [Plotly Dash](https://plot.ly/dash) framework. The app turned out better than I expected and
 I think I'll try to convert it into an open-source package for everyone to use. That is, I'll rewrite
-it such that any neuroimaging researcher (or teacher! More about that later) with a proper dataset
+it such that any neuroimaging researcher (or teacher! more about that later) with a proper dataset
 can use `VoxelViz` to show/demonstrate it.
 
 ## Usage
@@ -88,9 +88,8 @@ confound regression, etc.) on your model fit!
 ![alt text](https://github.com/lukassnoek/VoxelViz/raw/master/img/model.gif "Logo Title Text 1")
 
 ## See for yourself!
-`VoxelViz` will run as a standonly app on a VPS [X8 BladeVPS](https://www.transip.nl/vps/)
-from TransIP, which will be accessible once I figured out how to make NGINX with SSL-encryption
-work ... :grimacing:
+`VoxelViz` will run as a standalone app on a VPS [X8 BladeVPS](https://www.transip.nl/vps/)
+from TransIP, which can be viewed at [teaching.lukas-snoek.com](http://teaching.lukas-snoek.com/) and [showcase.lukas-snoek.com](http://showcase.lukas-snoek.com/).
 
 Alternatively, you can clone this repository and run the app(s) locally! First, you'll need to
 install the dependencies, which you can do through:
@@ -110,4 +109,4 @@ Couple of thing that I'd still like to implement!
 
 - Make it a standalone app for others to use! 
 - Add option to load variable regressors in checkbox;
-- Figure out NGINX;
+- Toggle between timeseries view and frequency/powerplot view
