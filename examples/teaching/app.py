@@ -21,7 +21,7 @@ app = dash.Dash(csrf_protect=False)
 server = app.server
 
 # Load config (with mappings)
-with open('config.json') as config:    
+with open('teaching/config.json') as config:    
     cfg = json.load(config, object_pairs_hook=OrderedDict)
 
 # Get the first key (random) from mappings, and load contrast/func

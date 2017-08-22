@@ -99,6 +99,9 @@ ENV/
 
 # mypy
 .mypy_cache/
-*/*.feat
-*/*nii.gz
-*/current_contrast.txt
+
+#
+examples/*/*.feat
+examples/*/config.json
+current_contrast.txt
+voxelviz/current_contrast.txt

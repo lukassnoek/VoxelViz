@@ -57,7 +57,7 @@ def calculate_statistics(y, y_hat, n_pred, grouplevel):
         return 'Model fit (mean squared error): %.3f' % (SSE / float(y.size))
     else:
         SSM = ((y_hat - y.mean()) ** 2).sum()
-        df1 = np.max(n_pred - 1, 1)
+        df1 = np.max([n_pred - 1, 1])
         df2 = y.size - df1
         MSM = SSM / df1
         F = MSM / (SSE / df2)
