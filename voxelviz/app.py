@@ -9,15 +9,15 @@ from glob import glob
 from collections import OrderedDict
 import os.path as op
 import json
-from .utils import (load_data, index_by_slice, standardize,
+from utils import (load_data, index_by_slice, standardize,
                     read_design_file, calculate_statistics)
 
 import click
 
 
-@click.command()
-@click.option('--cfg', default='config.json')
-@click.option('--data')
+#@click.command()
+#@click.option('--cfg', default='config.json')
+#@click.option('--data')
 def vxv(cfg, data):
 
     app = Dash(csrf_protect=False)
@@ -142,15 +142,29 @@ def vxv(cfg, data):
 
                 html.Div(className='row', children=[
 
-                    html.Div(className='twelve columns', children=[
+                    html.Div(className='five columns', children=[
+
+                        dcc.RadioItems(
+                            id='datatype',
+                            options=[
+                                {'label': 'time', 'value': 'time'},
+                                {'label': 'frequency', 'value': 'freq'}
+                                                            ],
+                            labelStyle={'display': 'inline-block'},
+                            value='time')
+                    ], style={'color': colors['text'], 'padding-left': '50px'}),
+
+                    html.Div(className='four columns', children=[
                         
                         dcc.Checklist(
                             options=[
                                     {'label': 'Voxel', 'value': 'voxel'},
                                     {'label': 'Model', 'value': 'model'}
                                     ],
-                            values=['voxel'], id='voxel_disp')
-                    ], style={'padding-left': '550px'})
+                            values=['voxel'], id='voxel_disp',
+                            labelStyle={'display': 'inline-block'})
+
+                    ], style={'padding-left': '0px', 'color': colors['text']})
                     
                 ]),
             
@@ -265,31 +279,21 @@ def vxv(cfg, data):
          Input(component_id='direction', component_property='value'),
          Input(component_id='slice', component_property='value'),
          Input(component_id='brainplot', component_property='hoverData'),
-         Input(component_id='voxel_disp', component_property='values')])
-    def update_brainplot_time(threshold, contrast, direction, sslice, hoverData, voxel_disp):
+         Input(component_id='voxel_disp', component_property='values'),
+         Input(component_id='datatype', component_property='value')])
+    def update_brainplot_time(threshold, contrast, direction, sslice, hoverData,
+                              voxel_disp, datatype):
 
-        layout = go.Layout(autosize=True,
-                           margin={'t': 50, 'l': 50, 'r': 5},
-                           plot_bgcolor=colors['background'],
-                           paper_bgcolor=colors['background'],
-                           font={'color': colors['text']},
-                           xaxis=dict(#autorange=False,
-                                      showgrid=True,
-                                      zeroline=True,
-                                      showline=True,
-                                      autotick=True,
-                                      #ticks='',
-                                      showticklabels=True,
-                                      title='Time'),
-                           yaxis=dict(autorange=True,
-                                      showgrid=True,
-                                      zeroline=True,
-                                      showline=True,
-                                      autotick=True,
-                                      #ticks='',
-                                      showticklabels=True,
-                                      title='Activation (contrast estimate)'))
-                                      #range=[-4, 4]))
+        if datatype == 'time':
+            if grouplevel:
+                xtitle = 'Subjects'
+            else:
+                xtitle = 'Time'
+            
+            ytitle = 'Activation (contrast estimate)'
+        else:
+            xtitle = 'Frequency (Hz)'
+            ytitle = 'Power'
     
         with open("current_contrast.txt", "r") as text_file:
             current_contrast = text_file.readlines()[0]
@@ -303,9 +307,6 @@ def vxv(cfg, data):
 
             with open("current_contrast.txt", "w") as text_file:
                 text_file.write(contrast)
-    
-        layout.title = 'Activation across subjects' if grouplevel else 'Activation across time'
-        layout.xaxis['title'] = 'Subjects' if grouplevel else 'Time'
 
         if hoverData is None:
             if grouplevel:
@@ -315,33 +316,75 @@ def vxv(cfg, data):
         else:
             x = hoverData['points'][0]['x']
             y = hoverData['points'][0]['y']
-    
+
         img = index_by_slice(direction, sslice, global_func)
         signal = img[x, y, :].ravel()
+
         if np.all(np.isnan(signal)):
             signal = np.zeros(signal.size)
-    
+
+        if 'model' in voxel_disp and not np.all(signal == 0):
+            betas = np.linalg.lstsq(global_design, signal)[0]
+            signal_hat = betas.dot(global_design.T)
+            fitted_model = go.Scatter(x=np.arange(1, global_func.shape[-1] + 1),
+                                      y=signal_hat,name='Model fit')
+
         if grouplevel:
+            datatype = 'time'
+            plottitle = 'Activation across subjects'
             bcolors = ['rgb(225,20,20)' if sig > 0 else 'rgb(35,53,216)' for sig in signal]
             bdata = go.Bar(x=np.arange(1, global_func.shape[-1] + 1), y=signal, name='Activity',
                            marker=dict(color=bcolors,
                                        line=dict(color='rgb(211,211,211)', width=0.2)))
         else:
-            bdata = go.Scatter(x=np.arange(global_func.shape[-1]), y=signal, name='Activity')
-    
+            plottitle = 'Activation across time'
+            bdata = go.Scatter(x=np.arange(global_func.shape[-1]),
+                               y=signal, name='Activity')
+
+        layout = go.Layout(autosize=True,
+                           margin={'t': 50, 'l': 50, 'r': 5},
+                           plot_bgcolor=colors['background'],
+                           paper_bgcolor=colors['background'],
+                           font={'color': colors['text']},
+                           xaxis=dict(#autorange=False,
+                                      showgrid=True,
+                                      zeroline=True,
+                                      showline=True,
+                                      autotick=True,
+                                      #ticks='',
+                                      showticklabels=True,
+                                      title=xtitle),
+                           yaxis=dict(autorange=True,
+                                      showgrid=True,
+                                      zeroline=True,
+                                      showline=True,
+                                      autotick=True,
+                                      #ticks='',
+                                      showticklabels=True,
+                                      title=ytitle),
+                           title=plottitle)    
+
         if 'model' in voxel_disp and not np.all(signal == 0):
-            betas = np.linalg.lstsq(global_design, signal)[0]
-            signal_hat = betas.dot(global_design.T)
-            fitted_model = go.Scatter(x=np.arange(1, global_func.shape[-1] + 1), y=signal_hat,
-                                      name='Model fit')
-            return {'data': [bdata, fitted_model], 'layout': layout}
+            figure = {'data': [bdata, fitted_model], 'layout': layout}
         else:
-            return {'data': [bdata], 'layout': layout}
+            figure = {'data': [bdata], 'layout': layout}
+
+        if datatype == 'freq':
+
+            for i, element in enumerate(figure['data']):
+                from scipy.signal import periodogram
+                dat = element['y']
+                freq, power = periodogram(dat, 0.5, return_onesided=True)
+                element['y'] = power
+                element['x'] = freq
+                figure['data'][i] = element
+            
+        return figure
 
     app.run_server()
 
 
 if __name__ == '__main__':
 
-    vxv('config.json')
+    vxv('examples/teaching/config.json', 'examples/teaching')
 
