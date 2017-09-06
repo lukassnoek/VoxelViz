@@ -1,6 +1,8 @@
 # VoxelViz
 Visualization tool for (f)MRI data-sets using Plotly Dash. Submitted to the [TransIP](https://www.transip.nl/) VPS competition.
 
+UPDATE: I won the competition! Thanks for TransIP/Tweakers for hosting this competition (and the 1st prize: a kick-ass gaming laptop and HTC Vive) -- this definitely motivated me to keep on developing this app!
+
 ## To do
 Couple of thing that I'd still like to implement and (relatively unimportant) bugfixes.
 
