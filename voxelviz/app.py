@@ -1,3 +1,5 @@
+import os
+import os.path as op
 from dash import Dash
 from dash.dependencies import Input, Output
 import dash_core_components as dcc
@@ -7,7 +9,6 @@ import nibabel as nib
 import numpy as np
 from glob import glob
 from collections import OrderedDict
-import os.path as op
 import json
 from utils import (load_data, index_by_slice, standardize,
                     read_design_file, calculate_statistics)
@@ -15,9 +16,9 @@ from utils import (load_data, index_by_slice, standardize,
 import click
 
 
-#@click.command()
-#@click.option('--cfg', default='config.json')
-#@click.option('--data')
+@click.command()
+@click.option('--cfg', default='config.json')
+@click.option('--data', default=os.getcwd())
 def vxv(cfg, data):
 
     app = Dash(csrf_protect=False)
@@ -26,10 +27,10 @@ def vxv(cfg, data):
     colors = {
         'background': '#000000',
         'text': '#D3D3D3'
-    }   
+    }
 
     # Load config (with mappings)
-    with open(cfg) as config:    
+    with open(cfg) as config:
         cfg = json.load(config, object_pairs_hook=OrderedDict)
 
     # Get the first key (random) from mappings, and load contrast/func
@@ -56,7 +57,7 @@ def vxv(cfg, data):
 
     if cfg['standardize']:
         global_func = standardize(global_func)
-    
+
     # Start layout of app
     app.layout = html.Div(
 
@@ -69,7 +70,7 @@ def vxv(cfg, data):
                         id='title'),
 
                 html.Div(className='row' ,children=[
-                
+
                     dcc.Markdown("""Developed for the [TransIP](https://www.transip.nl/) VPS-competition""")
                 ], style={'textAlign': 'center', 'color': colors['text'], 'padding-bottom': '20px'})
 
@@ -89,7 +90,7 @@ def vxv(cfg, data):
                     ]),
 
                     html.Div(className='three columns', children=[
-                
+
                         dcc.RadioItems(
                             id='direction',
                             options=[
@@ -100,7 +101,7 @@ def vxv(cfg, data):
                             labelStyle={'display': 'inline-block'},
                             value='X')
                     ], style={'color': colors['text'], 'padding-top': '5px'}),
-                
+
                     html.Div(className='four columns', children=[
 
                         dcc.Slider(
@@ -155,7 +156,7 @@ def vxv(cfg, data):
                     ], style={'color': colors['text'], 'padding-left': '50px'}),
 
                     html.Div(className='four columns', children=[
-                        
+
                         dcc.Checklist(
                             options=[
                                     {'label': 'Voxel', 'value': 'voxel'},
@@ -165,13 +166,13 @@ def vxv(cfg, data):
                             labelStyle={'display': 'inline-block'})
 
                     ], style={'padding-left': '0px', 'color': colors['text']})
-                    
+
                 ]),
-            
+
                 html.Div(className='row', children=[
 
                     dcc.Graph(id='brainplot_time', animate=False)
-                
+
                 ]),
 
                 html.Div(className='row', children=[
@@ -187,9 +188,7 @@ def vxv(cfg, data):
     )
 
     external_css = ["https://codepen.io/lukassnoek/pen/Kvzmzv.css"]
-
-    for css in external_css:
-        app.css.append_css({"external_url": css})
+    app.css.append_css({"external_url": external_css})
 
     @app.callback(
     Output(component_id='parameter_value', component_property='children'),
@@ -197,14 +196,14 @@ def vxv(cfg, data):
      Input(component_id='voxel_disp', component_property='values')])
     def update_parameter_statistics(figure, voxel_disp):
 
-        if 'model' in voxel_disp and len(figure['data']) > 1: 
+        if 'model' in voxel_disp and len(figure['data']) > 1:
             y = np.array(figure['data'][0]['y'])
             y_hat = np.array(figure['data'][1]['y'])
             n_pred = global_design.shape[1]
             stat_txt = calculate_statistics(y, y_hat, n_pred, grouplevel)
         else:
             stat_txt = ''
-        
+
         return stat_txt
 
     @app.callback(
@@ -226,7 +225,7 @@ def vxv(cfg, data):
          Input(component_id='direction', component_property='value'),
          Input(component_id='slice', component_property='value')])
     def update_brainplot(threshold, contrast, direction, sslice):
-    
+
         with open("current_contrast.txt", "r") as text_file:
             current_contrast = text_file.readlines()[0]
 
@@ -240,9 +239,11 @@ def vxv(cfg, data):
 
             with open("current_contrast.txt", "w") as text_file:
                 text_file.write(contrast)
-    
+
         bg_slice = index_by_slice(direction, sslice, global_bg)
         img_slice = index_by_slice(direction, sslice, global_contrast)
+
+        print(bg_slice.sum())
 
         bg_map = go.Heatmap(z=bg_slice.T, colorscale='Greys', showscale=False, hoverinfo="none", name='background')
         tmp = np.ma.masked_where(np.abs(img_slice) < threshold, img_slice)
@@ -289,12 +290,12 @@ def vxv(cfg, data):
                 xtitle = 'Subjects'
             else:
                 xtitle = 'Time'
-            
+
             ytitle = 'Activation (contrast estimate)'
         else:
             xtitle = 'Frequency (Hz)'
             ytitle = 'Power'
-    
+
         with open("current_contrast.txt", "r") as text_file:
             current_contrast = text_file.readlines()[0]
 
@@ -362,7 +363,7 @@ def vxv(cfg, data):
                                       #ticks='',
                                       showticklabels=True,
                                       title=ytitle),
-                           title=plottitle)    
+                           title=plottitle)
 
         if 'model' in voxel_disp and not np.all(signal == 0):
             figure = {'data': [bdata, fitted_model], 'layout': layout}
@@ -378,7 +379,7 @@ def vxv(cfg, data):
                 element['y'] = power
                 element['x'] = freq
                 figure['data'][i] = element
-            
+
         return figure
 
     app.run_server()
@@ -386,5 +387,4 @@ def vxv(cfg, data):
 
 if __name__ == '__main__':
 
-    vxv('examples/teaching/config.json', 'examples/teaching')
-
+    vxv('config.json', '../examples/teaching')

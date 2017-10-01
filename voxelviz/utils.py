@@ -52,7 +52,7 @@ def read_design_file(feat_dir):
 def calculate_statistics(y, y_hat, n_pred, grouplevel):
 
     SSE = ((y_hat - y) ** 2).sum()
-    
+
     if grouplevel:
         return 'Model fit (mean squared error): %.3f' % (SSE / float(y.size))
     else:

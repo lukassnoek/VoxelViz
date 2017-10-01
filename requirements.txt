@@ -6,3 +6,4 @@ dash-core-components
 dash-html-components
 nibabel
 plotly
+click

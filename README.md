@@ -11,11 +11,13 @@ To fix:
 - [ ] Fix range of slice-scrolling (currently sometimes out of range)
 - [ ] Fix automatic range in heatmap (colors are now variable)
 - [ ] Fix location (and text-color) of model/voxel checkbox!
+- [ ] Fix darkgrey text on Hover-box
 
 To implement:
-- [ ] Refactor to make standalone app!
+- [x] Refactor to make standalone app!
+- [ ] Add option to load in own data (with dcc.Load component)
 - [ ] Add option to show separate regressors (not only model fit)
-- [ ] Option to toggle between timeseries and frequency view (nice to show effect of e.g. highpass filter)
+- [x] Option to toggle between timeseries and frequency view (nice to show effect of e.g. highpass filter)
 - [ ] Add download script to download data to check examples (teaching/showcase) locally
 
 ## Intro
@@ -31,21 +33,21 @@ As of now, `VoxelViz` can be used in two ways, which correspond to the two apps 
 repository (the one in the `usecase` folder and the one in the `teaching` folder).
 
 ### Showcase results
-First, it can be used to interactively visualize results from (group-level) fMRI analyses. 
+First, it can be used to interactively visualize results from (group-level) fMRI analyses.
 Or, in layman terms: show pretty brain pictures. In the `usecase` folder, the `app.py` file
 runs an app that shows the results from my [fMRI study](https://academic.oup.com/scan/article/12/7/1025/3798709/Shared-states-using-MVPA-to-test-neural-overlap) (freely accessible!) about the representation
 of emotion in the brain. `VoxelViz` visualizes the brain images corresponding to the different
 analyses we did (left panel of the app), which can be interactively manipulated by, for example, adjusting the statistical
-threshold, orientation (`X`, `Y`, `Z`), and the current "slice" (specific 2D view; changing this is 
+threshold, orientation (`X`, `Y`, `Z`), and the current "slice" (specific 2D view; changing this is
 like "scrolling" through the brain image).
 
 Additionally, `VoxelViz` interactively visualizes the
 "timeseries" from the voxel (3D cube, which represents the unit of measurement) that you hover over
 in the brain image from the app's left panel. So, the right panel (timeseries plot) updates according
-to where your cursor is in the app's right panel - cool huh? 
+to where your cursor is in the app's right panel - cool huh?
 
 ### Teaching neuroimaging
-Next to the "showcase" use, I think this app could be quite helpful in a teaching context. 
+Next to the "showcase" use, I think this app could be quite helpful in a teaching context.
 It happens to be that I myself teach two "neuroimaging" (analysis of brain-data) courses at the
 University of Amsterdam, and I struggly to explain "dry" (often statistical) concepts during my
 lectures and computer labs. Of course, I try to make my lectures more "lively" by including a lot
@@ -91,7 +93,7 @@ automatically updates the brain plot (higher thresholds should show less red/blu
 In the right panel of the app, there is a "timeseries" plot that shows the underlying signal of
 the highlighted [voxel](https://en.wikipedia.org/wiki/Voxel) (3D equivalent of pixel) in the brain plot.
 In other words, if you hover over a voxel in the brain plot, the timeseries plot will automatically show
-the underlying signal of that voxel. 
+the underlying signal of that voxel.
 
 ![alt text](https://github.com/lukassnoek/VoxelViz/raw/master/img/hover.gif "Logo Title Text 1")
 
@@ -100,7 +102,7 @@ The "results" in the left panel (the brain plot) are derived from models fit to 
 in the right panel. By clicking on the "Model" checkbox above the right plot, you can visualize the model
 fit to the data, which again updates when you change the position of your cursor. This is especially helpful
 in a teaching context when you want to show students the effect of preprocessing options (such as filtering,
-confound regression, etc.) on your model fit! 
+confound regression, etc.) on your model fit!
 
 ![alt text](https://github.com/lukassnoek/VoxelViz/raw/master/img/model.gif "Logo Title Text 1")
 
