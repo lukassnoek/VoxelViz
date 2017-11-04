@@ -1,7 +1,52 @@
+import subprocess
+import os
+import zipfile
+import platform
+import click
 import os.path as op
 import nibabel as nib
 import json
 import numpy as np
+
+default_data_dir = op.join(op.dirname(op.dirname(__file__)))
+
+@click.command()
+@click.option('--directory', default=default_data_dir)
+def download_data(directory):
+    ''' Downloads example data. '''
+
+    url = 'https://surfdrive.surf.nl/files/index.php/s/ftTY9c79FgIxW99/download'
+
+    cmd = "where" if platform.system() == "Windows" else "which"
+    with open(os.devnull, 'w') as devnull:  # check if curl is available
+        res = subprocess.call([cmd, 'curl'], stdout=devnull)
+
+        if res != 0:
+            raise OSError("The program 'curl' was not found on your computer!"
+                          " Either install it or download the data from "
+                          "surfdrive: %s" % url)
+
+    dst_file = op.join(directory, 'examples.zip')
+    if op.isfile(dst_file):
+        msg = ('Zip-file already exists (%s). Probably best to unzip yourself '
+               'instead of re-downloading it...' % dst_file)
+        raise ValueError(msg)
+
+    dst_dir = dst_file.replace('.zip', '')
+    if not op.isdir(dst_dir):
+        os.makedirs(dst_dir)
+        print("Downloading the data ...\n")
+        cmd = "curl -o %s %s" % (dst_file, url)
+        return_code = subprocess.call(cmd, shell=True)
+        print("\nDone!")
+        print("Unzipping ...", end='')
+        zip_ref = zipfile.ZipFile(dst_file, 'r')
+        zip_ref.extractall(dst_dir)
+        zip_ref.close()
+        print(" done!")
+        os.remove(dst_file)
+    else:
+        print("Data is already downloaded and located at %s/*" % dst_dir)
 
 
 def index_by_slice(direction, sslice, img):

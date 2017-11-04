@@ -19,5 +19,6 @@ setup(
     entry_points='''
         [console_scripts]
         vxv=voxelviz.app:vxv
+        vxv_download_data=voxelviz.utils:download_data
     '''
 )

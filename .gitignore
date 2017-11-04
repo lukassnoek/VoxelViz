@@ -105,3 +105,4 @@ examples/*/*.feat
 examples/*/config.json
 current_contrast.txt
 voxelviz/current_contrast.txt
+**/.DS_Store

@@ -1,3 +1,4 @@
+import click
 import os
 import os.path as op
 from dash import Dash
@@ -10,24 +11,50 @@ import numpy as np
 from glob import glob
 from collections import OrderedDict
 import json
-from utils import (load_data, index_by_slice, standardize,
+from .utils import (load_data, index_by_slice, standardize,
                     read_design_file, calculate_statistics)
 
-import click
+
+default_cfg = op.join(op.dirname(__file__), 'config.json')
 
 
 @click.command()
-@click.option('--cfg', default='config.json')
-@click.option('--data', default=os.getcwd())
-def vxv(cfg, data):
+@click.option('--cfg', default=None)
+@click.option('--data', default=None)
+@click.option('--deploy', default=False)
+def vxv(cfg, data, deploy):
+    ''' Main function starting the app.
 
-    app = Dash(csrf_protect=False)
+    Parameters
+    ----------
+    cfg : string
+        Path to config-file
+    data : string
+        Path to directory with data
+    deploy : bool
+        Whether the app is deployed (True) or run locally (False)
+    '''
+
+    if cfg is None or data is None:
+        msg = ("You didn't specify a config-file and/or data-directory! "
+               "You can upload data/config-file in the browser itself (only "
+               "if it isn't deployed!) or, if you don't have data yourself, "
+               "you can download two example data-sets with:\n"
+               "$ vxv_download_data [--directory]\n"
+               "Then, you can run the app with the example data as follows:\n"
+               "$ vxv --cfg <path to example-data>/config.json --data "
+               "<path to example-data>")
+        raise ValueError(msg)
+
+    # Start Dash app
+    app = Dash()
     server = app.server
 
-    colors = {
-        'background': '#000000',
-        'text': '#D3D3D3'
-    }
+    # Default colors of app
+    colors = dict(
+        background='#000000',
+        text='#D3D3D3'
+    )
 
     # Load config (with mappings)
     with open(cfg) as config:
@@ -187,7 +214,7 @@ def vxv(cfg, data):
         ]
     )
 
-    external_css = ["https://codepen.io/lukassnoek/pen/Kvzmzv.css"]
+    external_css = "https://codepen.io/lukassnoek/pen/Kvzmzv.css"
     app.css.append_css({"external_url": external_css})
 
     @app.callback(
@@ -385,6 +412,6 @@ def vxv(cfg, data):
     app.run_server()
 
 
-if __name__ == '__main__':
-
-    vxv('config.json', '../examples/teaching')
+#if __name__ == '__main__':
+#
+#    vxv('config.json', '../examples/teaching')
