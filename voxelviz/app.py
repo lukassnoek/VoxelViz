@@ -11,9 +11,6 @@ import numpy as np
 from glob import glob
 from collections import OrderedDict
 import json
-from .utils import (load_data, index_by_slice, standardize,
-                    read_design_file, calculate_statistics)
-
 
 default_cfg = op.join(op.dirname(__file__), 'config.json')
 
@@ -22,6 +19,11 @@ default_cfg = op.join(op.dirname(__file__), 'config.json')
 @click.option('--cfg', default=None)
 @click.option('--data', default=None)
 @click.option('--deploy', default=False)
+def vxv_cmd(cfg, data, deploy):
+
+    vxv(cfg, data, deploy)
+
+
 def vxv(cfg, data, deploy):
     ''' Main function starting the app.
 
@@ -46,6 +48,10 @@ def vxv(cfg, data, deploy):
                "<path to example-data>")
         raise ValueError(msg)
 
+    if deploy:
+         from voxelviz.utils import (load_data, index_by_slice, standardize, read_design_file, calculate_statistics)
+    else:
+         from .utils import (load_data, index_by_slice, standardize, read_design_file, calculate_statistics)
     # Start Dash app
     app = Dash()
     server = app.server
@@ -409,9 +415,7 @@ def vxv(cfg, data, deploy):
 
         return figure
 
-    app.run_server()
-
-
-#if __name__ == '__main__':
-#
-#    vxv('config.json', '../examples/teaching')
+    if deploy:
+        return app, server
+    else:
+          app.run_server()

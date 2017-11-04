@@ -18,7 +18,7 @@ setup(
     include_package_data=True,
     entry_points='''
         [console_scripts]
-        vxv=voxelviz.app:vxv
+        vxv=voxelviz.app:vxv_cmd
         vxv_download_data=voxelviz.utils:download_data
     '''
 )
