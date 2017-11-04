@@ -1,5 +1,6 @@
 import click
 import os
+import warnings
 import os.path as op
 from dash import Dash
 from dash.dependencies import Input, Output
@@ -11,8 +12,6 @@ import numpy as np
 from glob import glob
 from collections import OrderedDict
 import json
-
-default_cfg = op.join(op.dirname(__file__), 'config.json')
 
 
 @click.command()
@@ -46,7 +45,7 @@ def vxv(cfg, data, deploy):
                "Then, you can run the app with the example data as follows:\n"
                "$ vxv --cfg <path to example-data>/config.json --data "
                "<path to example-data>")
-        raise ValueError(msg)
+        warnings.warn(msg)
 
     if deploy:
          from voxelviz.utils import (load_data, index_by_slice, standardize, read_design_file, calculate_statistics)
@@ -102,7 +101,7 @@ def vxv(cfg, data, deploy):
                         style={'textAlign': 'center', 'color': colors['text']},
                         id='title'),
 
-                html.Div(className='row' ,children=[
+                html.Div(className='row', children=[
 
                     dcc.Markdown("""Developed for the [TransIP](https://www.transip.nl/) VPS-competition""")
                 ], style={'textAlign': 'center', 'color': colors['text'], 'padding-bottom': '20px'})
@@ -214,8 +213,7 @@ def vxv(cfg, data, deploy):
 
                         html.P(id='parameter_value')
                     ], style={'textAlign': 'center', 'color': colors['text'], 'padding-top': '5px', 'font-size': '120%'})
-                ]),
-
+                ])
             ])
         ]
     )
@@ -276,9 +274,9 @@ def vxv(cfg, data, deploy):
         bg_slice = index_by_slice(direction, sslice, global_bg)
         img_slice = index_by_slice(direction, sslice, global_contrast)
 
-        print(bg_slice.sum())
+        bg_map = go.Heatmap(z=bg_slice.T, colorscale='Greys', showscale=False,
+                            hoverinfo="none", name='background')
 
-        bg_map = go.Heatmap(z=bg_slice.T, colorscale='Greys', showscale=False, hoverinfo="none", name='background')
         tmp = np.ma.masked_where(np.abs(img_slice) < threshold, img_slice)
         func_map = go.Heatmap(z=tmp.T, opacity=1, name='Activity map',
                               colorbar={'thickness': 20, 'title': 'Z-val', 'x': -.1})
