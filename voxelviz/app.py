@@ -9,7 +9,6 @@ import dash_html_components as html
 import plotly.graph_objs as go
 import nibabel as nib
 import numpy as np
-from glob import glob
 from collections import OrderedDict
 import json
 
@@ -48,9 +47,12 @@ def vxv(cfg, data, deploy):
         warnings.warn(msg)
 
     if deploy:
-         from voxelviz.utils import (load_data, index_by_slice, standardize, read_design_file, calculate_statistics)
+         from voxelviz.utils import (load_data, index_by_slice, standardize,
+                                     read_design_file, calculate_statistics)
     else:
-         from .utils import (load_data, index_by_slice, standardize, read_design_file, calculate_statistics)
+         from .utils import (load_data, index_by_slice, standardize,
+                             read_design_file, calculate_statistics)
+
     # Start Dash app
     app = Dash()
     server = app.server
@@ -66,7 +68,7 @@ def vxv(cfg, data, deploy):
         cfg = json.load(config, object_pairs_hook=OrderedDict)
 
     # Get the first key (random) from mappings, and load contrast/func
-    #global_func, global_contrast, global_design
+    # TO REFACTOR: get rid of hidden state
     global_contrast_name = list(cfg['mappings'].keys())[0]
     global_func, global_contrast = load_data(op.join(data, global_contrast_name), load_func=True)
     global_design = read_design_file(op.join(data, global_contrast_name))
@@ -378,12 +380,10 @@ def vxv(cfg, data, deploy):
                            plot_bgcolor=colors['background'],
                            paper_bgcolor=colors['background'],
                            font={'color': colors['text']},
-                           xaxis=dict(#autorange=False,
-                                      showgrid=True,
+                           xaxis=dict(showgrid=True,
                                       zeroline=True,
                                       showline=True,
                                       autotick=True,
-                                      #ticks='',
                                       showticklabels=True,
                                       title=xtitle),
                            yaxis=dict(autorange=True,
@@ -391,7 +391,6 @@ def vxv(cfg, data, deploy):
                                       zeroline=True,
                                       showline=True,
                                       autotick=True,
-                                      #ticks='',
                                       showticklabels=True,
                                       title=ytitle),
                            title=plottitle)
@@ -416,4 +415,4 @@ def vxv(cfg, data, deploy):
     if deploy:
         return app, server
     else:
-          app.run_server()
+        app.run_server()
