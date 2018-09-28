@@ -15,7 +15,7 @@ default_data_dir = op.join(op.dirname(op.dirname(__file__)))
 def download_data(directory):
     ''' Downloads example data. '''
 
-    url = 'https://surfdrive.surf.nl/files/index.php/s/ftTY9c79FgIxW99/download'
+    url = 'https://surfdrive.surf.nl/files/index.php/s/NRhXx2BevS3BDR9/download'
 
     cmd = "where" if platform.system() == "Windows" else "which"
     with open(os.devnull, 'w') as devnull:  # check if curl is available
